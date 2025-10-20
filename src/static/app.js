@@ -23,10 +23,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
-        const participantsHtml =
-          details.participants && details.participants.length
-            ? `<ul>${details.participants.map(p => `<li>${escapeHtml(p)}</li>`).join("")}</ul>`
-            : `<p class="participants-empty">No participants yet</p>`;
+        let participantsHtml;
+        if (details.participants && details.participants.length) {
+          participantsHtml = `<ul>${details.participants
+            .map(
+              (p) =>
+                `<li><span class="participant-email">${escapeHtml(p)}</span> <button class="participant-unregister" data-activity="${escapeHtml(
+                  name
+                )}" data-email="${escapeHtml(p)}" title="Unregister">✖</button></li>`
+            )
+            .join("")}</ul>`;
+        } else {
+          participantsHtml = `<p class="participants-empty">No participants yet</p>`;
+        }
 
         activityCard.innerHTML = `
           <h4>${escapeHtml(name)}</h4>
@@ -38,6 +47,43 @@ document.addEventListener("DOMContentLoaded", () => {
             ${participantsHtml}
           </div>
         `;
+
+        // Attach click handlers for unregister buttons
+        const unregisterButtons = activityCard.querySelectorAll('.participant-unregister');
+        unregisterButtons.forEach((btn) => {
+          btn.addEventListener('click', async (e) => {
+            const activityName = btn.getAttribute('data-activity');
+            const email = btn.getAttribute('data-email');
+
+            if (!confirm(`Unregister ${email} from ${activityName}?`)) return;
+
+            try {
+              const resp = await fetch(
+                `/activities/${encodeURIComponent(activityName)}/participants?email=${encodeURIComponent(email)}`,
+                { method: 'DELETE' }
+              );
+
+              const resJson = await resp.json();
+
+              if (resp.ok) {
+                messageDiv.textContent = resJson.message || 'Participant unregistered';
+                messageDiv.className = 'success';
+                // Refresh list
+                fetchActivities();
+              } else {
+                messageDiv.textContent = resJson.detail || 'Failed to unregister participant';
+                messageDiv.className = 'error';
+              }
+              messageDiv.classList.remove('hidden');
+              setTimeout(() => messageDiv.classList.add('hidden'), 5000);
+            } catch (err) {
+              console.error('Error unregistering participant:', err);
+              messageDiv.textContent = 'Failed to unregister participant. Please try again.';
+              messageDiv.className = 'error';
+              messageDiv.classList.remove('hidden');
+            }
+          });
+        });
 
         activitiesList.appendChild(activityCard);
 
