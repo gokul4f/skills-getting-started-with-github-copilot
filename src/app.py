@@ -20,6 +20,57 @@ app.mount("/static", StaticFiles(directory=os.path.join(Path(__file__).parent,
           "static")), name="static")
 
 # In-memory activity database
+additional_activities = {
+    # Sports (2)
+    "Soccer Team": {
+        "description": "Competitive soccer team practicing tactics and teamwork",
+        "schedule": "Mondays, Wednesdays, 4:00 PM - 6:00 PM",
+        "max_participants": 22,
+        "participants": ["liam@mergington.edu"]
+    },
+    "Basketball Team": {
+        "description": "Indoor basketball team focused on drills and interschool matches",
+        "schedule": "Tuesdays, Thursdays, 5:00 PM - 7:00 PM",
+        "max_participants": 12,
+        "participants": ["noah@mergington.edu"]
+    },
+
+    # Artistic (2)
+    "Art Club": {
+        "description": "Explore drawing, painting, and mixed media projects",
+        "schedule": "Wednesdays, 3:30 PM - 5:00 PM",
+        "max_participants": 25,
+        "participants": ["ava@mergington.edu"]
+    },
+    "Drama Club": {
+        "description": "Performances, acting workshops, and stage production experience",
+        "schedule": "Fridays, 4:00 PM - 6:30 PM",
+        "max_participants": 30,
+        "participants": ["mia@mergington.edu"]
+    },
+
+    # Intellectual (2)
+    "Debate Team": {
+        "description": "Practice public speaking, argumentation, and participate in debates",
+        "schedule": "Thursdays, 3:30 PM - 5:00 PM",
+        "max_participants": 18,
+        "participants": ["lucas@mergington.edu"]
+    },
+    "Robotics Club": {
+        "description": "Design and build robots; learn electronics and automation",
+        "schedule": "Saturdays, 10:00 AM - 1:00 PM",
+        "max_participants": 15,
+        "participants": ["sophia@mergington.edu"]
+    }
+}
+
+# Merge these into the main activities store at app startup so the module load order
+# (activities dict defined below) doesn't matter.
+@app.on_event("startup")
+def _populate_additional_activities():
+    for name, info in additional_activities.items():
+        if name not in activities:
+            activities[name] = info
 activities = {
     "Chess Club": {
         "description": "Learn strategies and compete in chess tournaments",
